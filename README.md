@@ -2,9 +2,9 @@
 
 **Summary**
 
- For each Call button press on a floor this algorithm will determine the best elevator to use based off which elevator is going in that direction, if it hasn't passed yet, has vacany, and is the closest.  If no eligible elevators are found, the request goes on a back log queue (Divided into Up and Down Queues for ease of searching later on).  As the elevator is moving in it's direction, if any call button requests or elevator button request come in that are along the direction the elevator and hasn't passed yet, it will dynamically add this to the Elevator's queue in the correct position.  When the elevator reaches the end of it's direction queue, it re evaluates what queue it should take on next.  If the variance of the Up or Down queue is greater then 20% it chooses that queue.  If less then 20% then it chooses a queue based on the closest location.
+ For each Call button press on a floor this algorithm will determine the best elevator to use based off which elevator is going in that direction compared to the direction of the floor button push, if the Elevatar hasn't passed yet, has vacany, and finally if still have multiple elvators to choose from at this point, picks the closest. If no eligible elevators are found, the request goes into either the Up or Down direction back log queue.  As the elevator is moving in it's direction, if any floor's call button is pressed that are along the direction the elevator and hasn't passed yet, it will dynamically add this to the Elevator's queue. As the elevator is passing floors, if that floor is anywhere in it's queue, it will also stop.  When the elevator reaches the end of of it's queue, it reevaluates what backlog queue it should take on next.  If the variance of the Up or Down queue is greater then 20% of the total floors, it chooses the larger queue.  If less then 20% then it chooses a queue based on the closest current location.
 
-A bug in the games design is used to keep track of Elevator occupany by counting the number of Elevator button pushes. Even if a floor is pressed, a rider will press it again inside the elevator.  Unfornutely, this is not the case on Call button presses from floors wo we can't estimate riders waiting there.
+A bug in the games design is used to keep track of an exact Elevator occupany by counting the number of Elevator button pushes. Even if a floor is alread pressed, a rider will press it again when entering the elevator.  Unfornutely, this is not the case on Call button presses from floors so we can't estimate riders waiting there.
 
 **Init**
 * Create Up & Dwn Floor Queue
@@ -48,4 +48,4 @@ A bug in the games design is used to keep track of Elevator occupany by counting
 ------
 
 ### Enhacements:
-Weighted Voting Algorithm. Rather then move incrementally in a direction. Skip to floor with most entrees in Elevator Queue. Also weight if people are waiting on that floor.  Optimizes throughput.
+Weighted Voting Algorithm. Rather then move incrementally in a direction until at the end of the queue. Skip to floor with most entrees in Elevator Queue and/or has people waiting to enter to maximise throughput. A weight can be assigned for each rider going to a floor, riders waiting on that floor for pickup, and floor 0 which has a higher frequency of riders starting.  Once the weights are summed up, the highest can be picked.
