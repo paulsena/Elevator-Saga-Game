@@ -1,4 +1,4 @@
-## My Elevator Saga Algorithm for the game [http://www.elevatorsaga.com]
+## My Elevator Saga Algorithm for the game (http://www.elevatorsaga.com)
 
 **Summary**
 
@@ -7,7 +7,7 @@
 A bug in the games design is used to keep track of Elevator occupany by counting the number of Elevator button pushes. Even if a floor is pressed, a rider will press it again inside the elevator.  Unfornutely, this is not the case on Call button presses from floors wo we can't estimate riders waiting there.
 
 Init
-	* Create Up & Dwn Floor Queue
+* Create Up & Dwn Floor Queue
 
 Elevator Init:
 	* Create Elevator Direction Bool
