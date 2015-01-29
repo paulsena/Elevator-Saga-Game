@@ -4,41 +4,7 @@ init: function(elevators, floors) {
     var floorQueueUp = [];
     var floorQueueDown = [];
 
-    Array.prototype.sortAsc = function () {
-        function sortNumber(a,b) {
-            return a - b;
-        }
-        return this.sort(sortNumber);
-    };
-    Array.prototype.sortDesc = function () {
-        function sortNumber(a,b) {
-            return b - a;
-        }
-        return this.sort(sortNumber);
-    };
-    if (!Array.prototype.findIndex) {
-      Array.prototype.findIndex = function(predicate) {
-        if (this == null) {
-          throw new TypeError('Array.prototype.findIndex called on null or undefined');
-        }
-        if (typeof predicate !== 'function') {
-          throw new TypeError('predicate must be a function');
-        }
-        var list = Object(this);
-        var length = list.length >>> 0;
-        var thisArg = arguments[1];
-        var value;
-
-        for (var i = 0; i < length; i++) {
-          value = list[i];
-          if (predicate.call(thisArg, value, i, list)) {
-            return i;
-          }
-        }
-        return -1;
-      };
-    }
-
+    // ***** Setup Floor Event Handlers *****
     for (var floor of floors) {
         floor.on("up_button_pressed down_button_pressed", function(event) {
             // Elevator Selector to route Floor Event to appropriate elevator
@@ -58,7 +24,7 @@ init: function(elevators, floors) {
                 }
             }
 
-            console.log("Call Btn Pushed on floor: " + this.floorNum() + " Up Queue: " + floorQueueUp + " Down Queue: " + floorQueueDown);
+            console.log(event + " on floor: " + this.floorNum() + " .Up Queue: " + floorQueueUp + " Down Queue: " + floorQueueDown + " Elevator Queue: " + elevators[elevatorIndex].destinationQueue);
             console.log("Selected Elevator: " + elevatorIndex);
         });
     }
@@ -76,7 +42,7 @@ init: function(elevators, floors) {
                 return elevator.obj.currentFloor() <= floorNum;  
             }
         }
-        function sortClosest(elevator1,elevator2) {
+        function sortClosest(elevator1, elevator2) {
             if (Math.abs(elevator1.obj.currentFloor()-floorNum) > Math.abs(elevator2.obj.currentFloor()-floorNum)) {
                 return 1;
             } else if (Math.abs(elevator1.obj.currentFloor()-floorNum) < Math.abs(elevator2.obj.currentFloor()-floorNum)) {
@@ -101,6 +67,7 @@ init: function(elevators, floors) {
         }
     }
     
+    // ***** Setup Elevator Event Handlers *****
     for (var elevator of elevators) {
         elevator.goingUp = true;
         elevator.ridersPerFloor = new Array(floors.length);
@@ -238,6 +205,42 @@ init: function(elevators, floors) {
                 return;
             }
         }
+    }
+
+    //Extending Array Class with Helpers
+    Array.prototype.sortAsc = function () {
+        function sortNumber(a,b) {
+            return a - b;
+        }
+        return this.sort(sortNumber);
+    };
+    Array.prototype.sortDesc = function () {
+        function sortNumber(a,b) {
+            return b - a;
+        }
+        return this.sort(sortNumber);
+    };
+    if (!Array.prototype.findIndex) {
+      Array.prototype.findIndex = function(predicate) {
+        if (this == null) {
+          throw new TypeError('Array.prototype.findIndex called on null or undefined');
+        }
+        if (typeof predicate !== 'function') {
+          throw new TypeError('predicate must be a function');
+        }
+        var list = Object(this);
+        var length = list.length >>> 0;
+        var thisArg = arguments[1];
+        var value;
+
+        for (var i = 0; i < length; i++) {
+          value = list[i];
+          if (predicate.call(thisArg, value, i, list)) {
+            return i;
+          }
+        }
+        return -1;
+      };
     }
 
 },

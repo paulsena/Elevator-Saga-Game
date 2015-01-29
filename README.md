@@ -1,6 +1,7 @@
 ## My Elevator Saga Algorithm for the game http://www.elevatorsaga.com
 
-**Background**
+####Game Background####
+
 This is a web based algorithm game where the user programs the movement and control of a series of elevators.  The goal is to transport people the most efficiently. Depending on how good your algorithm is, you can progress though more difficult levels.
 
 
@@ -52,5 +53,5 @@ A bug in the games design is used to keep track of an exact Elevator occupany by
 
 ------
 
-### Enhancements:
+###Future Enhancements:###
 Weighted Voting Algorithm. Rather then move incrementally in a direction until at the end of the queue. Skip to floor with most entrees in Elevator Queue and/or has people waiting to enter to maximise throughput. A weight can be assigned for each rider going to a floor, riders waiting on that floor for pickup, and floor 0 which has a higher frequency of riders starting.  Once the weights are summed up, the highest can be picked.
