@@ -11,7 +11,8 @@ init: function(elevators, floors) {
             var elevatorIndex = elevatorSelector(this.floorNum(), event);
             if (elevatorIndex > -1) {
                 elevators[elevatorIndex].goToFloor(this.floorNum());
-                setIndicator(elevators[elevatorIndex]);
+                elevators[elevatorIndex].setIndicator(event);
+                var logElevatorQue = elevators[elevatorIndex].destinationQueue;
             }
             // If no elevator found: Add to Up or Down Floor Queue & Sort 
             else {
@@ -24,7 +25,7 @@ init: function(elevators, floors) {
                 }
             }
 
-            console.log(event + " on floor: " + this.floorNum() + " .Up Queue: " + floorQueueUp + " Down Queue: " + floorQueueDown + " Elevator Queue: " + elevators[elevatorIndex].destinationQueue);
+            console.log(event + " on floor: " + this.floorNum() + " Up Queue: " + floorQueueUp + " Down Queue: " + floorQueueDown + " Elevator Queue: " + logElevatorQue);
             console.log("Selected Elevator: " + elevatorIndex);
         });
     }
@@ -36,10 +37,10 @@ init: function(elevators, floors) {
             return elevator.obj.getRiderCount() < MAX_CAPACITY;
         }
         function notPassed(elevator) {
-            if (elevator.goingUp) {
-                return elevator.obj.currentFloor() >= floorNum;
+            if (elevator.obj.goingUp) {
+                return elevator.obj.currentFloor() <= floorNum;
             } else {
-                return elevator.obj.currentFloor() <= floorNum;  
+                return elevator.obj.currentFloor() >= floorNum;  
             }
         }
         function sortClosest(elevator1, elevator2) {
@@ -76,14 +77,12 @@ init: function(elevators, floors) {
         // ****** Event Handlers *******
         elevator.on("floor_button_pressed", function(floorNum) {
             this.ridersPerFloor[floorNum]++;
-            console.log("RIDER CNT: " + this.getRiderCount());
 
             if (this.getRiderCount()<MAX_CAPACITY) {
                 this.goToFloor(floorNum);
             }
 
-            console.log("Elevator Btn Pushed. Dest Queue: " + this.destinationQueue);
-            console.log("Going UP? " + elevator.goingUp);
+            console.log("Elevator Btn Pushed for floor " + floorNum + ". Rider Cnt: " + this.getRiderCount() + ". Elevator Queue: " + this.destinationQueue);
         });
 
         elevator.on("passing_floor", function(floorNum, direction) {
@@ -93,11 +92,11 @@ init: function(elevators, floors) {
                 this.checkDestinationQueue();
             }
             // If elevator has vacany & floor exists anywhere in appropriate Up & Down queue, Stop here.
-            if (this.getRiderCount()<MAX_CAPACITY && elevator.goingUp && floorQueueUp.indexOf(floorNum)>-1) {
+            if (this.getRiderCount()<MAX_CAPACITY && this.goingUp && floorQueueUp.indexOf(floorNum)>-1) {
                 this.destinationQueue.splice(0,0,floorNum);
                 this.checkDestinationQueue();
                 floorQueueUp.splice(floorQueueUp.indexOf(floorNum),1);
-            } else if (this.getRiderCount()<MAX_CAPACITY && !elevator.goingUp && floorQueueDown.indexOf(floorNum)>-1) {
+            } else if (this.getRiderCount()<MAX_CAPACITY && !this.goingUp && floorQueueDown.indexOf(floorNum)>-1) {
                 this.destinationQueue.splice(0,0,floorNum);
                 this.checkDestinationQueue();
                 floorQueueUp.splice(floorQueueDown.indexOf(floorNum),1);
@@ -105,28 +104,28 @@ init: function(elevators, floors) {
         });
 
         // - Calculate Elevator Occupancy
-        // - If vacany: Pop off Floor Queue. Add to Elevator's Dest Queue
+        // - If vacany: Find floor from floor queue going same direction and that we haven't passed yet. Add to Elevator's Dest Queue
         // - Set Elevator Indicator
         elevator.on("stopped_at_floor", function(floorNum) {
             this.ridersPerFloor[floorNum] = 0;
-            this.clearQueues(floorNum);
+            clearFloorQueues(floorNum);
 
             function isGreater(element) {
                 return element > floorNum;
             }
 
             if (this.getRiderCount()<MAX_CAPACITY) {
-                if (elevator.goingUp) {
+                if (this.goingUp) {
                     var i = floorQueueUp.findIndex(isGreater);
                     if (i != -1) {
                         this.goToFloor(floorQueueUp.splice(i,1));
-                        setIndicator(this);
+                        this.setIndicator();
                     }
                 } else {
                     var i = floorQueueDown.findIndex(isGreater);
                     if (i != -1) {
                         this.goToFloor(floorQueueDown.splice(i,1));
-                        setIndicator(this);
+                        this.setIndicator();
                     }
                 }
             }
@@ -146,25 +145,30 @@ init: function(elevators, floors) {
             else if (queueVariance >= .2) {
                 if (floorQueueUp.length >floorQueueDown.length) {
                     targetQueue = floorQueueUp;
-                    elevator.goingUp = true;
+                    this.goingUp = true;
+                    this.setIndicator("up_button_pressed");
                 } else {
                     targetQueue = floorQueueDown;
-                    elevator.goingUp = false;
-                    //TODO: Preactively set Indicator?
+                    this.goingUp = false;
+                    this.setIndicator("down_button_pressed");
                 }
             // Almost equal
             } else {
                 // Choose queue based on current floor
                 if (this.currentFloor()<=floors.length/2) {
                     targetQueue = floorQueueUp;
-                    elevator.goingUp = true;
+                    this.goingUp = true;
+                    this.setIndicator("up_button_pressed");
                 } else {
                     targetQueue = floorQueueDown;
-                    elevator.goingUp = false;                    
+                    this.goingUp = false;                    
+                    this.setIndicator("down_button_pressed");
                 }
             }
             this.destinationQueue = targetQueue.slice(0);
             this.checkDestinationQueue();
+
+            console.log("Idle Elevator Processed")
         });
 
         // ****** Elevator Functions *******
@@ -174,25 +178,33 @@ init: function(elevators, floors) {
             });
         };
 
-        elevator.clearQueues = function(floorNum) {
-            var filter = function(el) {return el!=floorNum;};
-            floorQueueUp = floorQueueUp.filter(filter);
-            floorQueueDown = floorQueueDown.filter(filter);
-        };
-
-    }
-
-    // *******  Helper Utilities  *******
-    function setIndicator(elevator) {
-        if (elevator.destinationQueue[0]>=elevator.currentFloor()) {
-            elevator.goingDownIndicator(false);
-            elevator.goingUpIndicator(true);
-        } else {
-            elevator.goingUpIndicator(false);
-            elevator.goingDownIndicator(true);
+        elevator.setIndicator = function(event) {
+            if (event == "up_button_pressed") {
+                this.goingDownIndicator(false);
+                this.goingUpIndicator(true);
+                this.goingUp = true;
+            } else if (event == "down_button_pressed") {
+                this.goingDownIndicator(true);
+                this.goingUpIndicator(false);
+                this.goingUp = false;
+            } else if (this.destinationQueue[0]>=this.currentFloor()) {
+                this.goingDownIndicator(false);
+                this.goingUpIndicator(true);
+                this.goingUp = true;
+            } else {
+                this.goingUpIndicator(false);
+                this.goingDownIndicator(true);
+                this.goingUp = false;
+            }
         }
     }
 
+    // *******  Helper Utilities  *******
+    function clearFloorQueues(floorNum) {
+        var filter = function(el) {return el!=floorNum;};
+        floorQueueUp = floorQueueUp.filter(filter);
+        floorQueueDown = floorQueueDown.filter(filter);
+    };
     function removeDuplicates(queue) {
         for(var i=0;i<=9;i++) {
             removeRecursion(queue,i);
@@ -245,5 +257,7 @@ init: function(elevators, floors) {
 
 },
 update: function(dt, elevators, floors) {
+    elevators.forEach(function(e) {
+    });
 }
 }

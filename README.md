@@ -36,7 +36,7 @@ A bug in the games design is used to keep track of an exact Elevator occupany by
 
 **Reached Floor Event:**
 * Calculate Elevator Occupancy
-* If vacany: Pop off Floor Queue. Add to Elevator's Dest Queue
+* If vacany: Find floor from floor queue going same direction and that we haven't passed yet. Add to Elevator's Dest Queue
 * Set Elevator Indicator
 
 **Elevator Idle Event:**
@@ -54,4 +54,4 @@ A bug in the games design is used to keep track of an exact Elevator occupany by
 ------
 
 ###Future Enhancements:###
-Weighted Voting Algorithm. Rather then move incrementally in a direction until at the end of the queue. Skip to floor with most entrees in Elevator Queue and/or has people waiting to enter to maximise throughput. A weight can be assigned for each rider going to a floor, riders waiting on that floor for pickup, and floor 0 which has a higher frequency of riders starting.  Once the weights are summed up, the highest can be picked.
+Weighted Voting Algorithm. Rather then move incrementally in a direction until at the end of the queue. Skip to floor with most entrees in Elevator Queue and/or has people waiting to enter to maximize throughput. A weight can be assigned for each rider going to a floor, riders waiting on that floor for pickup, and floor 0 which has a higher frequency of riders starting.  Once the weights are summed up, the highest can be picked.
